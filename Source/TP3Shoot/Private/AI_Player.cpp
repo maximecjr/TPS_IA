@@ -58,6 +58,8 @@ AAI_Player::AAI_Player()
 	// Set parent socket
 	SK_Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("GripPoint"));
 
+	Team = 1.0f;
+	Life = 100.0f;
 
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 

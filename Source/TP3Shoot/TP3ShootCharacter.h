@@ -27,6 +27,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Input)
 	float TurnRateGamepad;
 
+	// blueprint write and read
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	float Team;
+
+
 protected:
 
 	// Add a gun skeletal mesh component
@@ -96,6 +101,8 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+
 
 public:
 
