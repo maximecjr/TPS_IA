@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "AI_Player.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -123,28 +124,50 @@ void ATP3ShootCharacter::StopAiming()
 void ATP3ShootCharacter::Fire()
 {
 	FVector Start, LineTraceEnd, ForwardVector;
+	FHitResult HitResult;
 
+	// Choisissez le point de départ et de fin en fonction de l'état d'aim (comme dans votre code actuel)
 	if (IsAiming)
 	{
-
 		Start = FollowCamera->GetComponentLocation();
-
 		ForwardVector = FollowCamera->GetForwardVector();
-
-		LineTraceEnd = Start + (ForwardVector * 10000);
 	}
-	else {
-
-		// Get muzzle location
+	else
+	{
 		Start = SK_Gun->GetSocketLocation("MuzzleFlash");
-
-		// Get Rotation Forward Vector
 		ForwardVector = FollowCamera->GetForwardVector();
+	}
+	LineTraceEnd = Start + (ForwardVector * 10000);
 
-		// Get End Point
-		LineTraceEnd = Start + (ForwardVector * 10000);
+	// Effectuez un Line Trace pour détecter un hit
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, LineTraceEnd, ECC_Pawn);
+
+
+	if (bHit)
+	{
+		// debug screen showing which object was hit
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hit Object: %s"), *HitResult.GetActor()->GetName()));
+		// Vérifiez si l'objet touché est un AI_Player
+		if (HitResult.GetActor()->IsA(AAI_Player::StaticClass()))
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("IA ciblee")));
+			// Cast pour accéder à la santé de l'AI_Player
+			AAI_Player* AIPlayer = Cast<AAI_Player>(HitResult.GetActor());
+			if (AIPlayer)
+			{
+				// Réduisez la vie de l'AI_Player
+				AIPlayer->DecreaseHealth(5.0f);
+				// debug screen displaying ai health
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AI Health: %f"), AIPlayer->Life));
+			}
+		}
+
+		// Dessinez la ligne de débogage pour la ligne de tir
+		DrawDebugLine(GetWorld(), Start, LineTraceEnd, FColor::Red, false, 3.0f, 5, 3.0f);
 	}
 }
+
 
 
 

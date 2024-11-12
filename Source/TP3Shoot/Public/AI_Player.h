@@ -103,6 +103,8 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	void DecreaseHealth(float Amount);
+
 public:
 
 	// Is Aiming

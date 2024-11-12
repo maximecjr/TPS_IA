@@ -11,7 +11,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "DrawDebugHelpers.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ATP3ShootCharacter
@@ -129,14 +131,31 @@ void AAI_Player::Fire()
 
 	if (IsAiming)
 	{
+		// debug screen message
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Fire Aiming"));
 
 		Start = FollowCamera->GetComponentLocation();
 
 		ForwardVector = FollowCamera->GetForwardVector();
 
 		LineTraceEnd = Start + (ForwardVector * 10000);
+
+		// Draw a debug line between Start and LineTraceEnd
+		DrawDebugLine(
+			GetWorld(),        // Monde
+			Start,             // Point de départ
+			LineTraceEnd,     // Point de fin
+			FColor::Red,       // Couleur de la ligne (rouge ici)
+			false,             // Est-ce que la ligne devrait persister
+			3.0f,              // Durée de la ligne
+			5,                 // Profondeur de la ligne
+			3.0f               // Epaisseur de la ligne
+		);
+
 	}
 	else {
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Fire Not Aiming"));
 
 		// Get muzzle location
 		Start = SK_Gun->GetSocketLocation("MuzzleFlash");
@@ -146,9 +165,32 @@ void AAI_Player::Fire()
 
 		// Get End Point
 		LineTraceEnd = Start + (ForwardVector * 10000);
+
+		// Draw a debug line between Start and LineTraceEnd
+		DrawDebugLine(
+			GetWorld(),        // Monde
+			Start,             // Point de départ
+			LineTraceEnd,     // Point de fin
+			FColor::Red,       // Couleur de la ligne (rouge ici)
+			false,             // Est-ce que la ligne devrait persister
+			3.0f,              // Durée de la ligne
+			5,                 // Profondeur de la ligne
+			3.0f               // Epaisseur de la ligne
+		);
+
 	}
 }
 
+void AAI_Player::DecreaseHealth(float Amount)
+{
+	Life -= Amount;
+	if (Life <= 0)
+	{
+		// Logique de mort de l'AI_Player
+		// destroy actor
+		Destroy();
+	}
+}
 
 
 void AAI_Player::BoostSpeed()
