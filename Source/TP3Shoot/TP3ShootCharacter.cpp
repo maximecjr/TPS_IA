@@ -59,6 +59,7 @@ ATP3ShootCharacter::ATP3ShootCharacter()
 	SK_Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("GripPoint"));
 
 	Team = 1.0f;
+	FColor color = FColor::Red;
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -164,7 +165,14 @@ void ATP3ShootCharacter::Fire()
 		}
 
 		// Dessinez la ligne de débogage pour la ligne de tir
-		DrawDebugLine(GetWorld(), Start, LineTraceEnd, FColor::Red, false, 3.0f, 5, 3.0f);
+		if (Team == 2.0f)
+		{
+			DrawDebugLine(GetWorld(), Start, HitResult.ImpactPoint, FColor::Red, false, 3.0f, 5, 3.0f);
+		}
+		else
+		{
+			DrawDebugLine(GetWorld(), Start, HitResult.ImpactPoint, FColor::Blue, false, 3.0f, 5, 3.0f);
+		}
 	}
 }
 

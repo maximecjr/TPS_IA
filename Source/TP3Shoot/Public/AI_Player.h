@@ -79,17 +79,23 @@ protected:
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
 	// Aiming function
+	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void Aim();
 
+	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void StopAiming();
 
 	// Firing function
+	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void Fire();
 
+	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void BoostSpeed();
 
+	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void RemoveSpeedBoost();
 
+	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void FireParticle(FVector Start, FVector Impact);
 
 protected:
