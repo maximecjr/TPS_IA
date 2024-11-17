@@ -59,7 +59,8 @@ ATP3ShootCharacter::ATP3ShootCharacter()
 	SK_Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("GripPoint"));
 
 	Team = 1.0f;
-	FColor color = FColor::Red;
+	FColor color = FColor::Blue;
+	Life = 20.0f;
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -157,6 +158,17 @@ void ATP3ShootCharacter::Fire()
 			AAI_Player* AIPlayer = Cast<AAI_Player>(HitResult.GetActor());
 			if (AIPlayer)
 			{
+				// debug screen AI team
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AI Team: %f"), AIPlayer->Team));
+				// debug screen player team
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Player Team: %f"), Team));
+				// Vérifie si l'AI_Player est de la même équipe que le joueur
+				if (AIPlayer->Team == Team)
+				{
+					// debug screen message
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Friendly Fire"));
+					return;
+				}
 				// Réduisez la vie de l'AI_Player
 				AIPlayer->DecreaseHealth(5.0f);
 				// debug screen displaying ai health
@@ -176,6 +188,18 @@ void ATP3ShootCharacter::Fire()
 	}
 }
 
+void ATP3ShootCharacter::DecreaseHealth(float Amount)
+{
+	Life -= Amount;
+	if (Life <= 0)
+	{
+		// Logique de mort de l'AI_Player
+		// teleport it to 1300 1200 90
+		SetActorLocation(FVector(1300, 1200, 90));
+		// reset life
+		Life = 20.0f;
+	}
+}
 
 
 
@@ -188,7 +212,7 @@ void ATP3ShootCharacter::BoostSpeed()
 		{
 			// Set Max walking speed to 500
 			GetCharacterMovement()->MaxWalkSpeed = 500.f;
-			
+
 			// Clear existing timer boost speed
 			GetWorldTimerManager().ClearTimer(BoostSpeedTimer);
 
@@ -249,12 +273,12 @@ void ATP3ShootCharacter::MoveForward(float Value)
 
 void ATP3ShootCharacter::MoveRight(float Value)
 {
-	if ( (Controller != nullptr) && (Value != 0.0f) )
+	if ((Controller != nullptr) && (Value != 0.0f))
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
+
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction

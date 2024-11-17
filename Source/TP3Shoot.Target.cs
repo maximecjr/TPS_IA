@@ -9,6 +9,8 @@ public class TP3ShootTarget : TargetRules
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
+
+		bOverrideBuildEnvironment = true;
 		ExtraModuleNames.Add("TP3Shoot");
 	}
 }

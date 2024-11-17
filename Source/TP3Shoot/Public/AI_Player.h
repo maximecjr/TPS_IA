@@ -33,6 +33,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float Life;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	class UWidgetComponent* HealthBarComponent;
+
 protected:
 
 	// Add a gun skeletal mesh component
@@ -110,6 +113,8 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	void DecreaseHealth(float Amount);
+
+	void UpdateHealthBar();
 
 public:
 
