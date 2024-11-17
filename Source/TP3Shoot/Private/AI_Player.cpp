@@ -14,6 +14,10 @@
 #include "DrawDebugHelpers.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
+#include <TP3Shoot/TP3ShootCharacter.h>
+#include "Components/WidgetComponent.h"
+#include "Blueprint/UserWidget.h"
+#include "HealthBarWidget.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ATP3ShootCharacter
@@ -64,9 +68,27 @@ AAI_Player::AAI_Player()
 	Life = 100.0f;
 	FColor TeamColor = FColor::Red;
 
+	HealthBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
+	HealthBarComponent->SetupAttachment(RootComponent);
+	HealthBarComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	HealthBarComponent->SetDrawSize(FVector2D(150, 50)); // Taille de la barre
+	HealthBarComponent->SetRelativeLocation(FVector(0, 0, 120)); // Position au-dessus de l'IA
+	HealthBarComponent->SetVisibility(true);
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+void AAI_Player::UpdateHealthBar()
+{
+	// debug screen
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Life: %f"), Life));
+	if (UHealthBarWidget* HealthWidget = Cast<UHealthBarWidget>(HealthBarComponent->GetWidget()))
+	{
+		//debug screen
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("HealthWidget: %f"), HealthWidget->HealthPercent));
+		HealthWidget->HealthPercent = Life / 100.0f; // Mise à jour de la barre
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -132,65 +154,92 @@ void AAI_Player::Fire()
 
 	if (IsAiming)
 	{
-		// debug screen message
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Fire Aiming"));
-
+		// Start location is from the camera
 		Start = FollowCamera->GetComponentLocation();
-
 		ForwardVector = FollowCamera->GetForwardVector();
-
-		LineTraceEnd = Start + (ForwardVector * 10000);
-
-		// Draw a debug line between Start and LineTraceEnd
-		DrawDebugLine(
-			GetWorld(),        // Monde
-			Start,             // Point de départ
-			LineTraceEnd,     // Point de fin
-			FColor::Red,       // Couleur de la ligne (rouge ici)
-			false,             // Est-ce que la ligne devrait persister
-			3.0f,              // Durée de la ligne
-			5,                 // Profondeur de la ligne
-			3.0f               // Epaisseur de la ligne
-		);
-
 	}
-	else {
-
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Fire Not Aiming"));
-
-		// Get muzzle location
+	else
+	{
+		// Start location is from the gun muzzle
 		Start = SK_Gun->GetSocketLocation("MuzzleFlash");
-
-		// Get Rotation Forward Vector
 		ForwardVector = FollowCamera->GetForwardVector();
+	}
 
-		// Get End Point
-		LineTraceEnd = Start + (ForwardVector * 10000);
+	// Calculate end point of the line trace
+	LineTraceEnd = Start + (ForwardVector * 10000);
 
-		// Draw a debug line between Start and LineTraceEnd
-		DrawDebugLine(
-			GetWorld(),        // Monde
-			Start,             // Point de départ
-			LineTraceEnd,     // Point de fin
-			FColor::Red,       // Couleur de la ligne (rouge ici)
-			false,             // Est-ce que la ligne devrait persister
-			3.0f,              // Durée de la ligne
-			5,                 // Profondeur de la ligne
-			3.0f               // Epaisseur de la ligne
-		);
+	// Perform line trace to detect any hit
+	FHitResult HitResult;
+	FCollisionQueryParams TraceParams(FName(TEXT("ProjectileTrace")), true, this);
+	TraceParams.bReturnPhysicalMaterial = false;
+	TraceParams.AddIgnoredActor(this); // Ignore self
 
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		Start,
+		LineTraceEnd,
+		ECC_Visibility,
+		TraceParams
+	);
+
+	// Draw debug line
+	DrawDebugLine(
+		GetWorld(),
+		Start,
+		LineTraceEnd,
+		FColor::Red,
+		false,
+		3.0f,
+		5,
+		3.0f
+	);
+
+	// Check if we hit something
+	if (bHit)
+	{
+
+		AActor* HitActor = HitResult.GetActor();
+		// debug screen gengine
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hit Actor: %s"), *HitActor->GetName()));
+
+		// Check if the hit actor is an AI_Player
+		if (AAI_Player* HitAIPlayer = Cast<AAI_Player>(HitActor))
+		{
+			// Check if they are on a different team
+			if (HitAIPlayer->Team != this->Team)
+			{
+				HitAIPlayer->DecreaseHealth(5.0f);
+			}
+		}
+		// Check if the hit actor is a TP3ShootCharacter (player character)
+		else if (ATP3ShootCharacter* HitPlayer = Cast<ATP3ShootCharacter>(HitActor))
+		{
+			// Check if they are on a different team
+			if (HitPlayer->Team != this->Team)
+			{
+				HitPlayer->DecreaseHealth(5.0f);
+			}
+		}
+
+		// Optionally, spawn impact particles at the hit location
+		FireParticle(Start, HitResult.Location);
 	}
 }
+
+
 
 void AAI_Player::DecreaseHealth(float Amount)
 {
 	Life -= Amount;
 	if (Life <= 0)
 	{
-		// Logique de mort de l'AI_Player
-		// destroy actor
-		Destroy();
+		Life = 0;
+		// Logique de mort (exemple : téléportation, réinitialisation)
+		SetActorLocation(FVector(1300, 1200, 90));
+		Life = 100.0f;
 	}
+
+	UpdateHealthBar(); // Actualise la barre de vie
 }
 
 
@@ -203,7 +252,7 @@ void AAI_Player::BoostSpeed()
 		{
 			// Set Max walking speed to 500
 			GetCharacterMovement()->MaxWalkSpeed = 500.f;
-			
+
 			// Clear existing timer boost speed
 			GetWorldTimerManager().ClearTimer(BoostSpeedTimer);
 
@@ -264,12 +313,12 @@ void AAI_Player::MoveForward(float Value)
 
 void AAI_Player::MoveRight(float Value)
 {
-	if ( (Controller != nullptr) && (Value != 0.0f) )
+	if ((Controller != nullptr) && (Value != 0.0f))
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
+
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
