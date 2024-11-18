@@ -149,30 +149,24 @@ void ATP3ShootCharacter::Fire()
 	{
 		// debug screen showing which object was hit
 
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hit Object: %s"), *HitResult.GetActor()->GetName()));
 		// Vérifiez si l'objet touché est un AI_Player
 		if (HitResult.GetActor()->IsA(AAI_Player::StaticClass()))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("IA ciblee")));
 			// Cast pour accéder à la santé de l'AI_Player
 			AAI_Player* AIPlayer = Cast<AAI_Player>(HitResult.GetActor());
 			if (AIPlayer)
 			{
 				// debug screen AI team
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AI Team: %f"), AIPlayer->Team));
 				// debug screen player team
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Player Team: %f"), Team));
 				// Vérifie si l'AI_Player est de la même équipe que le joueur
 				if (AIPlayer->Team == Team)
 				{
 					// debug screen message
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Friendly Fire"));
 					return;
 				}
 				// Réduisez la vie de l'AI_Player
 				AIPlayer->DecreaseHealth(5.0f);
 				// debug screen displaying ai health
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("AI Health: %f"), AIPlayer->Life));
 			}
 		}
 

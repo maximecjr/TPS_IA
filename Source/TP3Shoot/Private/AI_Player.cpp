@@ -82,11 +82,9 @@ AAI_Player::AAI_Player()
 void AAI_Player::UpdateHealthBar()
 {
 	// debug screen
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("Life: %f"), Life));
 	if (UHealthBarWidget* HealthWidget = Cast<UHealthBarWidget>(HealthBarComponent->GetWidget()))
 	{
 		//debug screen
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, FString::Printf(TEXT("HealthWidget: %f"), HealthWidget->HealthPercent));
 		HealthWidget->HealthPercent = Life / 100.0f; // Mise à jour de la barre
 	}
 }
@@ -181,18 +179,36 @@ void AAI_Player::Fire()
 		ECC_Visibility,
 		TraceParams
 	);
+	if (Team == 1.0f)
+	{
+		// Draw debug line
+		DrawDebugLine(
+			GetWorld(),
+			Start,
+			LineTraceEnd,
+			FColor::Blue,
+			false,
+			3.0f,
+			5,
+			3.0f
+		);
+	}
+	else
+	{
+		// Draw debug line
+		DrawDebugLine(
+			GetWorld(),
+			Start,
+			LineTraceEnd,
+			FColor::Red,
+			false,
+			3.0f,
+			5,
+			3.0f
+		);
+	}
+	
 
-	// Draw debug line
-	DrawDebugLine(
-		GetWorld(),
-		Start,
-		LineTraceEnd,
-		FColor::Red,
-		false,
-		3.0f,
-		5,
-		3.0f
-	);
 
 	// Check if we hit something
 	if (bHit)
@@ -200,7 +216,6 @@ void AAI_Player::Fire()
 
 		AActor* HitActor = HitResult.GetActor();
 		// debug screen gengine
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Hit Actor: %s"), *HitActor->GetName()));
 
 		// Check if the hit actor is an AI_Player
 		if (AAI_Player* HitAIPlayer = Cast<AAI_Player>(HitActor))

@@ -36,6 +36,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	class UWidgetComponent* HealthBarComponent;
 
+
 protected:
 
 	// Add a gun skeletal mesh component
