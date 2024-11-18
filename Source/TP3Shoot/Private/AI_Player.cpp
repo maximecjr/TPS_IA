@@ -79,15 +79,43 @@ AAI_Player::AAI_Player()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
 
-void AAI_Player::UpdateHealthBar()
+void AAI_Player::BeginPlay()
 {
-	// debug screen
-	if (UHealthBarWidget* HealthWidget = Cast<UHealthBarWidget>(HealthBarComponent->GetWidget()))
+	Super::BeginPlay();
+
+	if (HealthBarComponent)
 	{
-		//debug screen
-		HealthWidget->HealthPercent = Life / 100.0f; // Mise à jour de la barre
+		// Assurez-vous que le widget est initialisé
+		HealthBarComponent->InitWidget();
+
+		// Vérifiez que le widget est bien assigné
+		if (!HealthBarComponent->GetWidget())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("HealthBarComponent does not have a valid widget!"));
+		}
 	}
 }
+
+
+void AAI_Player::UpdateHealthBar()
+{
+	// Vérifiez que le composant existe et contient un widget
+	if (!HealthBarComponent) return;
+
+	UUserWidget* Widget = HealthBarComponent->GetWidget();
+
+	// Cast pour vérifier si c'est le bon type
+	if (UHealthBarWidget* HealthWidget = Cast<UHealthBarWidget>(Widget))
+	{
+		// Met à jour la barre de vie
+		HealthWidget->HealthPercent = Life / 100.0f;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to cast widget to UHealthBarWidget"));
+	}
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -215,7 +243,6 @@ void AAI_Player::Fire()
 	{
 
 		AActor* HitActor = HitResult.GetActor();
-		// debug screen gengine
 
 		// Check if the hit actor is an AI_Player
 		if (AAI_Player* HitAIPlayer = Cast<AAI_Player>(HitActor))
